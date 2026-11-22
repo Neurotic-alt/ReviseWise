@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { backend } from "./backend";
 import type { Json } from "@/integrations/supabase/types";
 import { resetAllStores, type PersistentStore } from "../store";
 import {
@@ -61,10 +61,11 @@ function valueFor(key: string): Json {
 
 async function save(key: string) {
   const uid = userId;
-  if (!uid) return;
+  const db = backend();
+  if (!uid || !db) return;
   pending += 1;
   setStatus({ state: "saving" });
-  const { error } = await supabase
+  const { error } = await db
     .from("student_data")
     .upsert({ user_id: uid, key, data: valueFor(key) }, { onConflict: "user_id,key" });
   pending -= 1;
@@ -100,7 +101,9 @@ function flushAll(): Promise<void[]> {
 /** Saves anything still waiting, then signs out (which clears this browser's copy). */
 export async function signOutStudent() {
   await flushAll();
-  await supabase.auth.signOut();
+  const db = backend();
+  if (db) await db.auth.signOut();
+  else stopSync({ clearLocal: true });
 }
 
 const onPageHide = () => void flushAll();
@@ -108,11 +111,13 @@ const onPageHide = () => void flushAll();
 /** Loads the student's saved data, or uploads this browser's data on first sign-in. */
 export async function startSync(uid: string, email: string | null, name: string | null = null) {
   if (userId === uid) return;
+  const db = backend();
+  if (!db) return;
   stopSync();
   userId = uid;
   setStatus({ state: "loading", email, name });
 
-  const { data, error } = await supabase.from("student_data").select("key, data").eq("user_id", uid);
+  const { data, error } = await db.from("student_data").select("key, data").eq("user_id", uid);
   if (uid !== userId) return;
   if (error) {
     console.error("[sync] load failed", error.message);

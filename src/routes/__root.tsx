@@ -14,7 +14,7 @@ import appCss from "../styles.css?url";
 import { AppShell } from "@/components/app/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { supabase } from "@/integrations/supabase/client";
+import { backend } from "@/lib/data/backend";
 import { startSync, stopSync } from "@/lib/data/cloud-sync";
 import { accountName } from "@/lib/greeting";
 
@@ -139,6 +139,8 @@ function RootComponent() {
 
   // Save study data to the signed-in student's account; guests keep it in this browser.
   useEffect(() => {
+    const supabase = backend();
+    if (!supabase) return; // No connection settings: stay in guest mode.
     void supabase.auth.getSession().then(({ data }) => {
       const user = data.session?.user;
       if (user) void startSync(user.id, user.email ?? null, accountName(user.user_metadata));

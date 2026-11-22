@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { backend } from "@/lib/data/backend";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -28,6 +28,11 @@ function ResetPasswordPage() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    const supabase = backend();
+    if (!supabase) {
+      toast.error("Accounts are unavailable right now. Please try again later.");
+      return;
+    }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
     setBusy(false);

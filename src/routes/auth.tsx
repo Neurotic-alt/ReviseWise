@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GoogleButton } from "@/components/app/GoogleButton";
-import { supabase } from "@/integrations/supabase/client";
+import { backend } from "@/lib/data/backend";
 import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/auth")({
@@ -40,7 +40,12 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
+  const unavailable = () => {
+    toast.error("Accounts are unavailable right now. You can keep studying — your work is saved in this browser.");
+  };
+
   const google = async () => {
+    if (!backend()) return unavailable();
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
@@ -57,6 +62,8 @@ function AuthPage() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    const supabase = backend();
+    if (!supabase) return unavailable();
     setBusy(true);
     setNotice(null);
     try {

@@ -33,6 +33,8 @@ import {
 import { DEMO_SUBJECT_PROGRESS } from "@/lib/data/demo-data";
 import { setTaskDone } from "@/lib/data/actions";
 import { examsStore, quizAttemptsStore, settingsStore, tasksStore } from "@/lib/data/stores";
+import { useSyncStatus } from "@/lib/data/cloud-sync";
+import { greetingName } from "@/lib/greeting";
 import { SUBJECTS, getTopicName, subjectStyle } from "@/lib/data/subjects";
 import { completionPercent, daysUntil, tasksOn, toISODate, upcomingExams } from "@/lib/planner";
 import { useStore, useToday } from "@/lib/store";
@@ -62,6 +64,13 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const settings = useStore(settingsStore);
+  const sync = useSyncStatus();
+  const greeting = greetingName({
+    signedIn: sync.state !== "guest",
+    settingsName: settings?.name,
+    accountName: sync.name,
+    email: sync.email,
+  });
   const tasks = useStore(tasksStore);
   const exams = useStore(examsStore);
   const attempts = useStore(quizAttemptsStore);
@@ -78,7 +87,7 @@ function Dashboard() {
   return (
     <>
       <PageHeader
-        title={settings ? `Welcome back, ${settings.name}` : "Welcome back"}
+        title={`Welcome back, ${greeting}`}
         description={
           today
             ? `${format(today, "EEEE d MMMM")} · Small, steady sessions beat last-minute cramming.`

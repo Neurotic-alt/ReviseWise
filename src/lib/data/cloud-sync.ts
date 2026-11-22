@@ -34,9 +34,11 @@ export type SyncState = "guest" | "loading" | "saving" | "saved" | "error";
 interface SyncStatus {
   state: SyncState;
   email: string | null;
+  /** Name from the sign-in account (e.g. Google profile), if any. */
+  name: string | null;
 }
 
-let status: SyncStatus = { state: "guest", email: null };
+let status: SyncStatus = { state: "guest", email: null, name: null };
 const listeners = new Set<() => void>();
 const setStatus = (next: Partial<SyncStatus>) => {
   status = { ...status, ...next };
@@ -104,11 +106,11 @@ export async function signOutStudent() {
 const onPageHide = () => void flushAll();
 
 /** Loads the student's saved data, or uploads this browser's data on first sign-in. */
-export async function startSync(uid: string, email: string | null) {
+export async function startSync(uid: string, email: string | null, name: string | null = null) {
   if (userId === uid) return;
   stopSync();
   userId = uid;
-  setStatus({ state: "loading", email });
+  setStatus({ state: "loading", email, name });
 
   const { data, error } = await supabase.from("student_data").select("key, data").eq("user_id", uid);
   if (uid !== userId) return;
@@ -144,14 +146,14 @@ export function stopSync(opts: { clearLocal?: boolean } = {}) {
   if (typeof window !== "undefined") window.removeEventListener("pagehide", onPageHide);
   userId = null;
   if (opts.clearLocal) resetAllStores();
-  setStatus({ state: "guest", email: null });
+  setStatus({ state: "guest", email: null, name: null });
 }
 
 const subscribe = (l: () => void) => {
   listeners.add(l);
   return () => listeners.delete(l);
 };
-const guest: SyncStatus = { state: "guest", email: null };
+const guest: SyncStatus = { state: "guest", email: null, name: null };
 
 export function useSyncStatus(): SyncStatus {
   return useSyncExternalStore(subscribe, () => status, () => guest);

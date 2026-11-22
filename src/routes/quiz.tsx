@@ -7,6 +7,7 @@ import {
   Lightbulb,
   MessageSquareText,
   RotateCcw,
+  SkipForward,
   Sparkles,
   XCircle,
 } from "lucide-react";
@@ -441,7 +442,36 @@ function QuizStudio() {
                   })}
                 </div>
                 {phase === "taking" && !checked[q.id] && (
-                  <div className="mt-3 flex justify-end">
+                  <div className="mt-3 flex flex-wrap justify-end gap-2">
+                    {answers[q.id] !== undefined && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setAnswers((a) => {
+                            const next = { ...a };
+                            delete next[q.id];
+                            return next;
+                          })
+                        }
+                      >
+                        Clear answer
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setAnswers((a) => {
+                          const next = { ...a };
+                          delete next[q.id];
+                          return next;
+                        });
+                        setChecked((c) => ({ ...c, [q.id]: true }));
+                      }}
+                    >
+                      <SkipForward /> Skip (0 marks)
+                    </Button>
                     <Button
                       variant="soft"
                       size="sm"
@@ -462,12 +492,13 @@ function QuizStudio() {
           {phase === "taking" && (
             <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-2xl border bg-card/95 p-3 pl-5 shadow-card backdrop-blur">
               <span className="text-sm text-muted-foreground">
-                {answeredCount}/{questions.length} answered
+                {answeredCount}/{questions.length} answered · {questions.length - answeredCount} skipped
+                (0 marks)
                 <span className="block text-xs">
                   Marking: {signed(quizMarking.correct)} right, {signed(quizMarking.wrong)} wrong
                 </span>
               </span>
-              <Button variant="hero" onClick={submit} disabled={answeredCount === 0}>
+              <Button variant="hero" onClick={submit}>
                 Submit answers
               </Button>
             </div>
@@ -490,7 +521,7 @@ function Solution({
 }) {
   const steps = q.steps?.length ? q.steps : q.explanation ? [q.explanation] : [];
   const verdict =
-    answer === undefined ? "Not answered" : answer === q.answerIndex ? "Correct" : "Not quite";
+    answer === undefined ? "Skipped" : answer === q.answerIndex ? "Correct" : "Not quite";
   return (
     <div className="mt-4 rounded-xl bg-surface px-4 py-3 text-sm">
       <div className="flex items-center justify-between gap-2">

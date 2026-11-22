@@ -125,6 +125,7 @@ function SettingsForm({ initial }: { initial: StudentSettings }) {
             <Input
               id="name"
               value={form.name}
+              placeholder="Your first name"
               maxLength={40}
               onChange={(e) => set("name", e.target.value)}
             />

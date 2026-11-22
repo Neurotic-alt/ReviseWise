@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { startSync, stopSync } from "@/lib/data/cloud-sync";
+import { accountName } from "@/lib/greeting";
 
 function NotFoundComponent() {
   return (
@@ -140,11 +141,15 @@ function RootComponent() {
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
       const user = data.session?.user;
-      if (user) void startSync(user.id, user.email ?? null);
+      if (user) void startSync(user.id, user.email ?? null, accountName(user.user_metadata));
     });
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
-        void startSync(session.user.id, session.user.email ?? null);
+        void startSync(
+          session.user.id,
+          session.user.email ?? null,
+          accountName(session.user.user_metadata),
+        );
       } else if (event === "SIGNED_OUT") {
         stopSync({ clearLocal: true });
       }

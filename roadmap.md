@@ -20,3 +20,5 @@
 - [x] Step-by-step solution right after each quiz answer ("Check answer"), and all at the end
 - [x] Marking: JEE/NEET +4/−1; MHT-CET, boards and others +1/0
 - [x] My Progress: real quiz analytics, accuracy rates, topic performance from saved data
+- [x] Dashboard greets the signed-in student by name (Student when signed out)
+- [x] Skipped quiz questions score 0 and are saved as skipped

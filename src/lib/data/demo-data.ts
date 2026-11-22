@@ -116,7 +116,7 @@ export function seedQuizAttempts(today: Date): QuizAttempt[] {
 }
 
 export const DEFAULT_SETTINGS: StudentSettings = {
-  name: "Alex",
+  name: "",
   yearGroup: "Year 10",
   country: "United Kingdom",
   curriculum: "GCSE",

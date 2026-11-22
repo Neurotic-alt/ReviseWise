@@ -174,7 +174,7 @@ function ProgressPage() {
               <EmptyState title="Nothing to chart yet" description="Each day you take a quiz adds a bar." />
             ) : (
               <ChartContainer config={chartConfig} className="aspect-auto h-56 w-full">
-                <BarChart data={days} margin={{ left: -20, right: 0 }}>
+                <BarChart data={days} margin={{ left: 0, right: 0, top: 8 }}>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" />
                   <XAxis
                     dataKey="label"
@@ -183,7 +183,7 @@ function ProgressPage() {
                     interval="preserveStartEnd"
                     minTickGap={16}
                   />
-                  <YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={44} />
+                  <YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={36} />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                   <Bar dataKey="accuracy" fill="var(--color-accuracy)" radius={[6, 6, 0, 0]} />
                 </BarChart>

@@ -32,7 +32,9 @@ use the editor.
 ## Project rules
 
 - Student data is read and written only through the stores in `src/lib/data/stores.ts`; `src/lib/data/cloud-sync.ts` mirrors each store to one `student_data` row per (user, key) while signed in, and the account copy wins on load; why: pages stay storage-agnostic and guests still work offline in the browser.
-- AI model order (direct Gemini models, per-attempt timeout) is defined once in `src/lib/tutor-prompt.ts` and shared by Companion and Quiz Studio; why: one place to change models.
+- AI model order (direct Gemini models, gateway backup model, per-attempt timeout) is defined once in `src/lib/tutor-prompt.ts` and shared by Companion and Quiz Studio; why: one place to change models.
+- Each exam's marking scheme lives on its entry in `src/lib/study-context.ts` (`markingFor` / `quizMarkingFor`); saved attempts store right/wrong/skipped and marks; why: scoring and progress analytics read one source.
+- My Progress analytics are pure functions in `src/lib/analytics.ts` over the student's own (non-demo) attempts from the stores; why: testable, and demo rows never skew real numbers.
 - Seeded sample records carry `isDemo` / demo IDs and the UI labels them; why: demonstration data must stay distinguishable from real student records.
 - AI calls (Companion and Quiz Studio) run server-side via `*.server.ts`: Gemini direct with GEMINI_API_KEY first, Lovable AI Gateway as backup; pre-written replies are only an outage fallback and are labelled as samples; why: the product must never pass a sample off as live AI.
 - Exam/curriculum, class levels and subject/topic resolution live in `src/lib/study-context.ts`, shared by both AI pages and the server prompts; questions on a typed subject carry `subjectLabel` and their scores go to `customQuizAttemptsStore`, never `quizAttemptsStore`; why: built-in subject stats, weak areas and revision dates only know the built-in subjects.

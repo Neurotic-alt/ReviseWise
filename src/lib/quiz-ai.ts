@@ -1,10 +1,11 @@
 import type { Difficulty, QuizQuestion, SubjectId } from "./data/types";
 import { getExam, type ExamId } from "./study-context";
+import { GEMINI_GATEWAY_MODEL } from "./tutor-prompt";
 
 // Prompt + parsing for AI-generated quizzes. Pure and browser-safe.
 
 /** Lovable AI Gateway model used when every direct Gemini model fails. */
-export const QUIZ_GATEWAY_MODEL = "google/gemini-3.8-flash";
+export const QUIZ_GATEWAY_MODEL = GEMINI_GATEWAY_MODEL;
 /** Placeholder subject id stored on questions for a typed subject (see subjectLabel). */
 export const CUSTOM_SUBJECT_PLACEHOLDER: SubjectId = "maths";
 
@@ -57,7 +58,7 @@ export function buildQuizPrompt(topics: QuizTopicRequest[], count: number, audie
     "Spread the questions across these topics as evenly as possible; set topicIndex to the topic's number:",
     list,
     "Each question has exactly four distinct options and one correct answerIndex (0-3).",
-    "steps: a worked solution in 2-5 short steps (no numbering) that a student can follow from the question to the correct answer, showing any formula or calculation used.",
+    "steps: ALWAYS give a worked solution in 2-5 short steps (no numbering) that a student can follow from the question to the correct answer, showing any formula, rule or calculation used. Never leave steps empty.",
     "explanation: one sentence on why the answer is correct and why the most tempting wrong option is wrong.",
     "Be accurate and match the stated difficulty. Vary the position of the correct answer. Reply with JSON only.",
   ].join("\n");

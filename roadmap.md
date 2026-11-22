@@ -16,3 +16,7 @@
 - [x] Gemini order: 2.5 Flash → 2.0 Flash → Lovable AI backup, 8-second wait each
 - [x] My Progress shows scores for typed (custom) subjects
 - [x] Accounts (Google + email/password); tasks, plans, quiz scores, streaks and chat saved to the database per student
+- [ ] Gemini 3 Flash Preview first on GEMINI_API_KEY, Lovable AI backup
+- [ ] Step-by-step solution right after each quiz answer ("Check answer"), and all at the end
+- [ ] Marking: JEE/NEET +4/−1; MHT-CET, boards and others +1/0
+- [ ] My Progress: real quiz analytics, accuracy rates, topic performance from saved data

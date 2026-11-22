@@ -5,8 +5,8 @@ import { getExam, type ExamId } from "./study-context";
 // Prompt building and reply parsing for the AI tutor. Pure and browser-safe,
 // so the server function and the tests share exactly the same rules.
 
-/** Models tried in order on Google's API with GEMINI_API_KEY, before the gateway backup. */
-export const GEMINI_DIRECT_MODELS = ["gemini-2.5-flash-lite", "gemini-3-flash-preview"] as const;
+/** Primary model on Google's API with GEMINI_API_KEY; the gateway (LOVABLE_API_KEY) is the backup. */
+export const GEMINI_DIRECT_MODELS = ["gemini-3-flash-preview"] as const;
 /** How long each direct Gemini attempt may take before moving on (Companion replies). */
 export const GEMINI_DIRECT_TIMEOUT_MS = 8_000;
 /** Quizzes take longer: every question comes with a worked, step-by-step solution. */
@@ -17,7 +17,7 @@ export function geminiThinking(model: string): { thinkingConfig?: { thinkingLeve
   return model.startsWith("gemini-3") ? { thinkingConfig: { thinkingLevel: "low" } } : {};
 }
 /** Same model through the Lovable AI Gateway (backup route). */
-export const GEMINI_GATEWAY_MODEL = "google/gemini-3.8-flash";
+export const GEMINI_GATEWAY_MODEL = "google/gemini-3-flash-preview";
 
 export const MAX_QUESTION_CHARS = 1500;
 export const MAX_HISTORY_MESSAGES = 8;

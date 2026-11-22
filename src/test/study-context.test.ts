@@ -107,26 +107,49 @@ describe("My Progress: typed subjects", () => {
 });
 
 import { markQuiz, questionMarks } from "@/lib/quiz";
-import { markingFor } from "@/lib/study-context";
-import { GEMINI_DIRECT_MODELS } from "@/lib/tutor-prompt";
+import { hasNegativeMarking, markingFor, quizMarkingFor } from "@/lib/study-context";
+import { GEMINI_DIRECT_MODELS, GEMINI_GATEWAY_MODEL } from "@/lib/tutor-prompt";
 
 describe("Gemini model order", () => {
-  it("tries 2.5 Flash Lite first, then 3 Flash Preview", () => {
-    expect([...GEMINI_DIRECT_MODELS]).toEqual(["gemini-2.5-flash-lite", "gemini-3-flash-preview"]);
+  it("uses gemini-3-flash-preview first on the Gemini key", () => {
+    expect([...GEMINI_DIRECT_MODELS]).toEqual(["gemini-3-flash-preview"]);
+  });
+  it("backs up with the same model through Lovable AI", () => {
+    expect(GEMINI_GATEWAY_MODEL).toBe("google/gemini-3-flash-preview");
   });
 });
 
-describe("Negative marking", () => {
-  it("is on with +4 / -1 for JEE, NEET and MHT-CET", () => {
-    for (const exam of ["jee", "neet", "mht-cet"] as const) {
+describe("Exam marking", () => {
+  it("is +4 / -1 for JEE and NEET", () => {
+    for (const exam of ["jee", "neet"] as const) {
       expect(markingFor(exam)).toEqual({ correct: 4, wrong: -1 });
+      expect(hasNegativeMarking(exam)).toBe(true);
     }
   });
 
-  it("is off for board exams, CUET and general study", () => {
-    for (const exam of ["cbse", "icse", "maharashtra", "cuet", "general"] as const) {
-      expect(markingFor(exam)).toBeNull();
+  it("is +1 / 0 with no negative marking for MHT-CET and board exams", () => {
+    for (const exam of ["mht-cet", "cbse", "icse", "maharashtra"] as const) {
+      expect(markingFor(exam)).toEqual({ correct: 1, wrong: 0 });
+      expect(hasNegativeMarking(exam)).toBe(false);
     }
+  });
+
+  it("keeps +4 but takes nothing off when a JEE student switches negative marking off", () => {
+    expect(quizMarkingFor("jee", false)).toEqual({ correct: 4, wrong: 0 });
+    expect(quizMarkingFor("jee", true)).toEqual({ correct: 4, wrong: -1 });
+  });
+
+  it("never adds negative marking to MHT-CET", () => {
+    expect(quizMarkingFor("mht-cet", true)).toEqual({ correct: 1, wrong: 0 });
+  });
+
+  it("scores MHT-CET 2 right, 1 wrong, 1 skipped as 2 out of 4", () => {
+    const qq = (id: string) => ({
+      id, subjectId: "maths" as const, topicId: "t", difficulty: "easy" as const,
+      prompt: "?", options: ["a", "b", "c", "d"], answerIndex: 0, explanation: "",
+    });
+    const r = markQuiz([qq("1"), qq("2"), qq("3"), qq("4")], { "1": 0, "2": 0, "3": 2 }, markingFor("mht-cet"));
+    expect(r).toMatchObject({ marks: 2, maxMarks: 4 });
   });
 
   const q = (id: string) => ({

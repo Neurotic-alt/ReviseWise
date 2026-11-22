@@ -9,15 +9,17 @@ export interface Marking {
   correct: number;
   wrong: number;
 }
-/** Standard entrance-exam scheme: +4 for a correct answer, −1 for a wrong one, 0 if skipped. */
+/** JEE / NEET scheme: +4 for a correct answer, −1 for a wrong one, 0 if skipped. */
 export const NEGATIVE_MARKING: Marking = { correct: 4, wrong: -1 };
+/** Every other exam (MHT-CET, boards, CUET, general): +1 for a correct answer, nothing taken off. */
+export const STANDARD_MARKING: Marking = { correct: 1, wrong: 0 };
 
 const SCHOOL_CLASSES = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"];
 
 export const EXAMS = [
   {
     id: "cbse",
-    marking: null,
+    marking: STANDARD_MARKING,
     label: "CBSE",
     levels: SCHOOL_CLASSES,
     defaultLevel: "Class 10",
@@ -25,7 +27,7 @@ export const EXAMS = [
   },
   {
     id: "icse",
-    marking: null,
+    marking: STANDARD_MARKING,
     label: "ICSE",
     levels: SCHOOL_CLASSES,
     defaultLevel: "Class 10",
@@ -33,7 +35,7 @@ export const EXAMS = [
   },
   {
     id: "maharashtra",
-    marking: null,
+    marking: STANDARD_MARKING,
     label: "Maharashtra State Board",
     levels: SCHOOL_CLASSES,
     defaultLevel: "Class 10",
@@ -60,7 +62,7 @@ export const EXAMS = [
   },
   {
     id: "mht-cet",
-    marking: NEGATIVE_MARKING,
+    marking: STANDARD_MARKING,
     label: "MHT-CET",
     levels: ["Class 11", "Class 12", "Dropper / Repeat year"],
     defaultLevel: "Class 12",
@@ -69,7 +71,7 @@ export const EXAMS = [
   },
   {
     id: "cuet",
-    marking: null,
+    marking: STANDARD_MARKING,
     label: "CUET",
     levels: ["Class 12", "Gap year"],
     defaultLevel: "Class 12",
@@ -77,7 +79,7 @@ export const EXAMS = [
   },
   {
     id: "general",
-    marking: null,
+    marking: STANDARD_MARKING,
     label: "General / University",
     levels: ["School (general)", "Undergraduate", "Postgraduate", "Self-learner"],
     defaultLevel: "Undergraduate",
@@ -92,9 +94,23 @@ export function getExam(id: ExamId) {
   return EXAMS.find((e) => e.id === id) ?? EXAMS[0];
 }
 
-/** The exam's negative-marking scheme, or null when it has none. */
-export function markingFor(id: ExamId): Marking | null {
+/** The exam's marking scheme. */
+export function markingFor(id: ExamId): Marking {
   return getExam(id).marking;
+}
+
+/** True only for exams that take marks off for a wrong answer (JEE, NEET). */
+export function hasNegativeMarking(id: ExamId): boolean {
+  return markingFor(id).wrong < 0;
+}
+
+/**
+ * Scheme a quiz uses. The student may switch negative marking off for JEE/NEET practice;
+ * then a wrong answer scores 0 but a correct one keeps its exam value.
+ */
+export function quizMarkingFor(id: ExamId, negativeOn: boolean): Marking {
+  const m = markingFor(id);
+  return negativeOn || m.wrong >= 0 ? m : { correct: m.correct, wrong: 0 };
 }
 
 export function isExamId(v: unknown): v is ExamId {

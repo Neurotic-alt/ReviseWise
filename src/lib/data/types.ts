@@ -68,6 +68,15 @@ export interface QuizAttempt {
   missedQuestionIds?: string[];
   /** Where the attempt came from. */
   source?: "studio" | "surprise";
+  /** Wrong answers (student's own attempts; older records may not have it). */
+  wrong?: number;
+  /** Questions left unanswered. */
+  skipped?: number;
+  /** Exam-style marks earned and available, using the exam's marking scheme. */
+  marks?: number;
+  maxMarks?: number;
+  /** Exam label the quiz was set for, e.g. "JEE". */
+  exam?: string;
 }
 
 /** A quiz on a subject the student typed themselves (kept apart from built-in subject stats). */
@@ -82,6 +91,10 @@ export interface CustomQuizAttempt {
   takenAt: string;
   exam?: string;
   level?: string;
+  wrong?: number;
+  skipped?: number;
+  marks?: number;
+  maxMarks?: number;
 }
 
 /** A real action the student took, used for daily missions and achievements. */

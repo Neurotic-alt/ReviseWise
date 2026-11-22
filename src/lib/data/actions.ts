@@ -1,7 +1,22 @@
 import { parseISO } from "date-fns";
 import { newId, toISODate } from "../planner";
 import { activityStore, customQuizAttemptsStore, quizAttemptsStore, tasksStore } from "./stores";
+import { markQuiz } from "../quiz";
+import type { Marking } from "../study-context";
 import type { CustomQuizAttempt, Difficulty, QuizQuestion } from "./types";
+
+type Answers = Record<string, number | undefined>;
+
+/** Right / wrong / skipped counts and exam marks for one group of questions. */
+function tally(qs: QuizQuestion[], answers: Answers, marking: Marking | undefined) {
+  const m = markQuiz(qs, answers, marking ?? { correct: 1, wrong: 0 });
+  return {
+    correct: m.correct,
+    wrong: m.wrong,
+    skipped: m.unanswered,
+    ...(marking ? { marks: m.marks, maxMarks: m.maxMarks } : {}),
+  };
+}
 
 /** Ticks or unticks a task and records the student's action for missions and achievements. */
 export function setTaskDone(taskId: string, done: boolean) {
@@ -35,7 +50,12 @@ export function logCompanionQuestion() {
 export function recordQuiz(
   questions: QuizQuestion[],
   answers: Record<string, number | undefined>,
-  meta: { difficulty: Difficulty | "mixed"; source: "studio" | "surprise" },
+  meta: {
+    difficulty: Difficulty | "mixed";
+    source: "studio" | "surprise";
+    marking?: Marking;
+    exam?: string;
+  },
 ) {
   const groups = new Map<string, QuizQuestion[]>();
   for (const q of questions) {
@@ -56,12 +76,13 @@ export function recordQuiz(
       subjectId: first.subjectId,
       topicId: first.topicId,
       difficulty: meta.difficulty === "mixed" ? hardest : meta.difficulty,
-      correct: qs.length - missed.length,
+      ...tally(qs, answers, meta.marking),
       total: qs.length,
       takenAt,
       isDemo: false,
       missedQuestionIds: missed,
       source: meta.source,
+      ...(meta.exam ? { exam: meta.exam } : {}),
     };
   });
   quizAttemptsStore.set((prev) => [...prev, ...created]);
@@ -72,7 +93,7 @@ export function recordQuiz(
 export function recordCustomQuiz(
   questions: QuizQuestion[],
   answers: Record<string, number | undefined>,
-  meta: { difficulty: Difficulty; exam?: string; level?: string },
+  meta: { difficulty: Difficulty; exam?: string; level?: string; marking?: Marking },
 ) {
   const groups = new Map<string, QuizQuestion[]>();
   for (const q of questions) {
@@ -88,7 +109,7 @@ export function recordCustomQuiz(
       subjectName: first.subjectLabel as string,
       topicName: first.topicId,
       difficulty: meta.difficulty,
-      correct: qs.filter((q) => answers[q.id] === q.answerIndex).length,
+      ...tally(qs, answers, meta.marking),
       total: qs.length,
       takenAt,
       ...(meta.exam ? { exam: meta.exam } : {}),

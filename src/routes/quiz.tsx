@@ -20,7 +20,14 @@ import { StudyContextFields, useStudyChoice } from "@/components/app/StudyContex
 import { recordCustomQuiz, recordQuiz } from "@/lib/data/actions";
 import { quizAttemptsStore } from "@/lib/data/stores";
 import { SUBJECTS, getSubject, getTopicName } from "@/lib/data/subjects";
-import { getExam, markingFor, resolveStudy, type Marking } from "@/lib/study-context";
+import {
+  getExam,
+  hasNegativeMarking,
+  markingFor,
+  quizMarkingFor,
+  resolveStudy,
+  type Marking,
+} from "@/lib/study-context";
 import type { Difficulty, QuizQuestion, SubjectId } from "@/lib/data/types";
 import { SURPRISE_QUESTION_COUNT, revisionDue, weakAreas } from "@/lib/learning";
 import { generateQuizFn } from "@/lib/quiz.functions";
@@ -30,7 +37,6 @@ import {
   markQuiz,
   questionMarks,
   scoreBand,
-  scoreQuiz,
 } from "@/lib/quiz";
 import { cn } from "@/lib/utils";
 
@@ -101,17 +107,21 @@ function QuizStudio() {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({});
 
-  // Negative marking switches on automatically for exams that use it (JEE, NEET, MHT-CET).
+  /** Questions whose answer the student has checked: locked, with the solution shown. */
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+
+  // JEE and NEET use +4 / −1 (negative marking on by default, can be switched off);
+  // every other exam uses +1 / 0.
   const examMarking = markingFor(choice.exam);
-  const [negativeMarking, setNegativeMarking] = useState(examMarking !== null);
-  useEffect(() => setNegativeMarking(markingFor(choice.exam) !== null), [choice.exam]);
+  const examHasNegative = hasNegativeMarking(choice.exam);
+  const [negativeMarking, setNegativeMarking] = useState(examHasNegative);
+  useEffect(() => setNegativeMarking(hasNegativeMarking(choice.exam)), [choice.exam]);
   /** Scheme used by the quiz on screen, fixed when it was generated. */
-  const [quizMarking, setQuizMarking] = useState<Marking | null>(null);
+  const [quizMarking, setQuizMarking] = useState<Marking>(examMarking);
 
   const answeredCount = questions.filter((q) => answers[q.id] !== undefined).length;
-  const score = scoreQuiz(questions, answers);
-  const marked = quizMarking ? markQuiz(questions, answers, quizMarking) : null;
-  const band = scoreBand(marked ? marked.percent : score.percent);
+  const marked = markQuiz(questions, answers, quizMarking);
+  const band = scoreBand(marked.percent);
 
   const [loading, setLoading] = useState<"ai" | "surprise" | null>(null);
 
@@ -126,9 +136,10 @@ function QuizStudio() {
         return;
       }
       setIsSurprise(kind === "surprise");
-      setQuizMarking(negativeMarking ? examMarking : null);
+      setQuizMarking(quizMarkingFor(choice.exam, negativeMarking));
       setQuestions(res.questions);
       setAnswers({});
+      setChecked({});
       setPhase("taking");
       window.scrollTo({ top: 0 });
     } catch {
@@ -202,26 +213,25 @@ function QuizStudio() {
   }, []);
 
   const submit = () => {
-    const result = scoreQuiz(questions, answers);
+    const exam = getExam(choice.exam).label;
     // Typed subjects are saved separately so built-in subject stats and revision stay accurate.
     const builtIn = questions.filter((q) => !q.subjectLabel);
     if (builtIn.length) {
       recordQuiz(builtIn, answers, {
         difficulty: isSurprise ? "mixed" : difficulty,
         source: isSurprise ? "surprise" : "studio",
+        marking: quizMarking,
+        exam,
       });
     }
     recordCustomQuiz(questions, answers, {
       difficulty,
-      exam: getExam(choice.exam).label,
+      exam,
       level: choice.level,
+      marking: quizMarking,
     });
-    const marks = quizMarking ? markQuiz(questions, answers, quizMarking) : null;
-    toast.success(
-      marks
-        ? `Quiz saved to My Progress — ${marks.marks}/${marks.maxMarks} marks`
-        : `Quiz saved to My Progress — ${result.correct}/${result.total}`,
-    );
+    const marks = markQuiz(questions, answers, quizMarking);
+    toast.success(`Quiz saved to My Progress — ${marks.marks}/${marks.maxMarks} marks`);
     setPhase("results");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -269,7 +279,7 @@ function QuizStudio() {
                 ariaLabel="Number of questions"
               />
             </Field>
-            {examMarking && (
+            {examHasNegative ? (
               <div className="flex items-start justify-between gap-4 rounded-xl border bg-surface px-4 py-3">
                 <div>
                   <p className="text-sm font-medium">Negative marking</p>
@@ -284,6 +294,14 @@ function QuizStudio() {
                   onCheckedChange={setNegativeMarking}
                   aria-label="Negative marking"
                 />
+              </div>
+            ) : (
+              <div className="rounded-xl border bg-surface px-4 py-3">
+                <p className="text-sm font-medium">Marking</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {getExam(choice.exam).label} style: {signed(examMarking.correct)} for a correct
+                  answer, no marks taken off for a wrong one.
+                </p>
               </div>
             )}
             <div className="flex flex-wrap gap-2">
@@ -305,25 +323,16 @@ function QuizStudio() {
       {phase === "results" && (
         <Card className="mb-6 bg-gradient-soft">
           <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
-            {marked ? (
-              <div className="flex min-w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-background/50 px-3 py-3">
-                <span className="font-display text-3xl font-semibold">
-                  {marked.marks}
-                  <span className="text-lg text-muted-foreground">/{marked.maxMarks}</span>
-                </span>
-                <span className="text-xs text-muted-foreground">marks</span>
-                <span className="mt-1 text-center text-[11px] leading-tight text-muted-foreground">
-                  {marked.correct} right · {marked.wrong} wrong · {marked.unanswered} skipped
-                </span>
-              </div>
-            ) : (
-              <div className="flex size-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-background/50">
-                <span className="font-display text-3xl font-semibold">{score.percent}%</span>
-                <span className="text-xs text-muted-foreground">
-                  {score.correct}/{score.total} correct
-                </span>
-              </div>
-            )}
+            <div className="flex min-w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-background/50 px-3 py-3">
+              <span className="font-display text-3xl font-semibold">
+                {marked.marks}
+                <span className="text-lg text-muted-foreground">/{marked.maxMarks}</span>
+              </span>
+              <span className="text-xs text-muted-foreground">marks</span>
+              <span className="mt-1 text-center text-[11px] leading-tight text-muted-foreground">
+                {marked.correct} right · {marked.wrong} wrong · {marked.unanswered} skipped
+              </span>
+            </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={BAND_COPY[band].variant}>
@@ -348,12 +357,10 @@ function QuizStudio() {
               <p className="mt-2 text-sm text-muted-foreground">
                 {BAND_COPY[band].text}
               </p>
-              {quizMarking && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Negative marking: {signed(quizMarking.correct)} correct, {signed(quizMarking.wrong)}{" "}
-                  wrong, 0 skipped.
-                </p>
-              )}
+              <p className="mt-1 text-xs text-muted-foreground">
+                Marking: {signed(quizMarking.correct)} correct, {signed(quizMarking.wrong)} wrong, 0
+                skipped.
+              </p>
             </div>
             <Button variant="hero" onClick={isSurprise ? surprise : generate}>
               {isSurprise ? <Dices /> : <RotateCcw />} {isSurprise ? "Another surprise" : "Retake"}
@@ -391,7 +398,7 @@ function QuizStudio() {
                 >
                   {q.options.map((opt, oi) => {
                     const picked = answers[q.id] === oi;
-                    const showResult = phase === "results";
+                    const showResult = phase === "results" || checked[q.id] === true;
                     const isAnswer = oi === q.answerIndex;
                     return (
                       <button
@@ -433,52 +440,20 @@ function QuizStudio() {
                     );
                   })}
                 </div>
-                {phase === "results" && (
-                  <div className="mt-4 rounded-xl bg-surface px-4 py-3 text-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium">Step-by-step solution</p>
-                      {quizMarking && <MarksChip value={questionMarks(q, answers[q.id], quizMarking)} />}
-                    </div>
-                    {answers[q.id] === undefined && (
-                      <span className="mt-1 block text-xs text-warning">Not answered</span>
-                    )}
-                    {q.steps && q.steps.length > 0 && (
-                      <ol className="mt-2.5 space-y-2">
-                        {q.steps.map((step, si) => (
-                          <li key={si} className="flex gap-2.5">
-                            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary-glow">
-                              {si + 1}
-                            </span>
-                            <span className="text-muted-foreground">{step}</span>
-                          </li>
-                        ))}
-                      </ol>
-                    )}
-                    <p className="mt-2.5">
-                      <span className="font-medium text-success">
-                        Answer: {String.fromCharCode(65 + q.answerIndex)}. {q.options[q.answerIndex]}
-                      </span>
-                      {q.explanation && (
-                        <span className="text-muted-foreground"> — {q.explanation}</span>
-                      )}
-                    </p>
-                    <div className="mt-2.5 flex flex-wrap gap-1.5">
-                      <Link
-                        to="/companion"
-                        search={{ prompt: q.prompt, mode: "explain", ...subjectSearch(q) }}
-                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs text-primary-glow transition-colors hover:bg-primary/15"
-                      >
-                        <MessageSquareText className="size-3.5" /> Explain this
-                      </Link>
-                      <Link
-                        to="/companion"
-                        search={{ prompt: q.prompt, mode: "hint", ...subjectSearch(q) }}
-                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs text-primary-glow transition-colors hover:bg-primary/15"
-                      >
-                        <Lightbulb className="size-3.5" /> Give me a hint
-                      </Link>
-                    </div>
+                {phase === "taking" && !checked[q.id] && (
+                  <div className="mt-3 flex justify-end">
+                    <Button
+                      variant="soft"
+                      size="sm"
+                      disabled={answers[q.id] === undefined}
+                      onClick={() => setChecked((c) => ({ ...c, [q.id]: true }))}
+                    >
+                      <CheckCircle2 /> Check answer
+                    </Button>
                   </div>
+                )}
+                {(phase === "results" || checked[q.id]) && (
+                  <Solution q={q} answer={answers[q.id]} marking={quizMarking} />
                 )}
               </CardContent>
             </Card>
@@ -488,11 +463,9 @@ function QuizStudio() {
             <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-2xl border bg-card/95 p-3 pl-5 shadow-card backdrop-blur">
               <span className="text-sm text-muted-foreground">
                 {answeredCount}/{questions.length} answered
-                {quizMarking && (
-                  <span className="block text-xs">
-                    Negative marking on: {signed(quizMarking.wrong)} for a wrong answer
-                  </span>
-                )}
+                <span className="block text-xs">
+                  Marking: {signed(quizMarking.correct)} right, {signed(quizMarking.wrong)} wrong
+                </span>
               </span>
               <Button variant="hero" onClick={submit} disabled={answeredCount === 0}>
                 Submit answers
@@ -502,6 +475,79 @@ function QuizStudio() {
         </div>
       )}
     </>
+  );
+}
+
+/** Step-by-step worked solution shown once a question is checked or the quiz is submitted. */
+function Solution({
+  q,
+  answer,
+  marking,
+}: {
+  q: QuizQuestion;
+  answer: number | undefined;
+  marking: Marking;
+}) {
+  const steps = q.steps?.length ? q.steps : q.explanation ? [q.explanation] : [];
+  const verdict =
+    answer === undefined ? "Not answered" : answer === q.answerIndex ? "Correct" : "Not quite";
+  return (
+    <div className="mt-4 rounded-xl bg-surface px-4 py-3 text-sm">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-medium">
+          <span
+            className={cn(
+              "mr-2",
+              answer === undefined
+                ? "text-warning"
+                : answer === q.answerIndex
+                  ? "text-success"
+                  : "text-destructive",
+            )}
+          >
+            {verdict} ·
+          </span>
+          Step-by-step solution
+        </p>
+        <MarksChip value={questionMarks(q, answer, marking)} />
+      </div>
+      {steps.length > 0 && (
+        <ol className="mt-2.5 space-y-2">
+          {steps.map((step, si) => (
+            <li key={si} className="flex gap-2.5">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary-glow">
+                {si + 1}
+              </span>
+              <span className="text-muted-foreground">{step}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="mt-2.5">
+        <span className="font-medium text-success">
+          Answer: {String.fromCharCode(65 + q.answerIndex)}. {q.options[q.answerIndex]}
+        </span>
+        {q.explanation && q.steps?.length ? (
+          <span className="text-muted-foreground"> — {q.explanation}</span>
+        ) : null}
+      </p>
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <Link
+          to="/companion"
+          search={{ prompt: q.prompt, mode: "explain", ...subjectSearch(q) }}
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs text-primary-glow transition-colors hover:bg-primary/15"
+        >
+          <MessageSquareText className="size-3.5" /> Explain this
+        </Link>
+        <Link
+          to="/companion"
+          search={{ prompt: q.prompt, mode: "hint", ...subjectSearch(q) }}
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs text-primary-glow transition-colors hover:bg-primary/15"
+        >
+          <Lightbulb className="size-3.5" /> Give me a hint
+        </Link>
+      </div>
+    </div>
   );
 }
 

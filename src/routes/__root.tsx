@@ -91,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "ReviseWise helps students aged 13–18 plan revision, practise with quizzes and track progress.",
       },
-      { name: "theme-color", content: "#101225" },
+      { name: "theme-color", content: "#D8A7CB" },
       { property: "og:title", content: "ReviseWise — AI learning companion for students" },
       {
         property: "og:description",
@@ -122,7 +122,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <HeadContent />
       </head>
@@ -163,7 +163,7 @@ function RootComponent() {
       <AppShell>
         <Outlet />
       </AppShell>
-      <Toaster theme="dark" position="bottom-right" />
+      <Toaster theme="light" position="bottom-right" />
     </QueryClientProvider>
   );
 }

@@ -124,7 +124,16 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Study streak" value="6 days" hint={<DemoBadge />} icon={<Flame />} />
+        <StatCard
+          label="Study streak"
+          value="6 days"
+          hint={<DemoBadge />}
+          icon={
+            <span className="inline-flex items-center justify-center rounded-full bg-gold p-1.5 text-gold-foreground">
+              <Flame />
+            </span>
+          }
+        />
         <StatCard
           label="Today's tasks"
           value={tasks ? `${todaysTasks.filter((t) => t.done).length}/${todaysTasks.length}` : "–"}

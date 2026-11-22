@@ -410,11 +410,11 @@ function QuizStudio() {
                         disabled={showResult}
                         onClick={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
                         className={cn(
-                          "flex items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors",
+                          "flex items-center gap-3 rounded-xl border bg-background/45 px-4 py-3 text-left text-sm text-foreground transition-colors disabled:opacity-100",
                           !showResult &&
                             (picked
-                              ? "border-primary bg-primary/15"
-                              : "hover:border-primary/40 hover:bg-card-elevated"),
+                              ? "border-primary bg-primary/15 font-medium"
+                              : "hover:border-primary/50 hover:bg-card-elevated"),
                           showResult && isAnswer && "border-success/60 bg-success/10",
                           showResult &&
                             picked &&

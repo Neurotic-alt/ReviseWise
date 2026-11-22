@@ -22,3 +22,4 @@
 - [x] My Progress: real quiz analytics, accuracy rates, topic performance from saved data
 - [x] Dashboard greets the signed-in student by name (Student when signed out)
 - [x] Skipped quiz questions score 0 and are saved as skipped
+- [x] Holographic Glass theme: lavender-gold gradient, frosted cards, magenta actions and readable contrast

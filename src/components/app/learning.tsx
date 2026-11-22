@@ -592,14 +592,14 @@ export function AchievementsCard({ className }: { className?: string }) {
                 key={a.id}
                 className={cn(
                   "rounded-xl border p-3.5 transition-colors",
-                  a.unlocked ? "border-warning/40 bg-warning/10" : "bg-surface",
+                  a.unlocked ? "border-warning/30 bg-gold/45" : "bg-surface",
                 )}
               >
                 <div className="flex items-center gap-2.5">
                   <span
                     className={cn(
                       "flex size-8 shrink-0 items-center justify-center rounded-full",
-                      a.unlocked ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground",
+                      a.unlocked ? "bg-gold text-gold-foreground" : "bg-muted text-muted-foreground",
                     )}
                   >
                     {a.unlocked ? <Award className="size-4" /> : <Lock className="size-3.5" />}

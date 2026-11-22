@@ -14,11 +14,11 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
         outline: "text-foreground",
-        demo: "border-warning/30 bg-warning/10 text-warning font-medium",
-        success: "border-transparent bg-success/15 text-success",
-        warning: "border-transparent bg-warning/15 text-warning",
-        danger: "border-transparent bg-destructive/15 text-destructive",
-        soft: "border-transparent bg-primary/15 text-primary-glow",
+        demo: "border-warning/25 bg-gold text-gold-foreground font-medium",
+        success: "border-success/20 bg-success/12 text-success",
+        warning: "border-warning/25 bg-gold text-gold-foreground",
+        danger: "border-destructive/20 bg-destructive/12 text-destructive",
+        soft: "border-primary/15 bg-primary/12 text-primary-glow",
       },
     },
     defaultVariants: {

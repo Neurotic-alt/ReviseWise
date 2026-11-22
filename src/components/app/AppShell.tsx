@@ -9,7 +9,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <SidebarInset className="bg-transparent">
-          <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur md:bg-transparent md:backdrop-blur-none">
+          <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/65 px-4 backdrop-blur-xl">
             <SidebarTrigger
               aria-label="Toggle navigation"
               className="text-muted-foreground hover:text-foreground"

@@ -57,7 +57,7 @@ export function AppSidebar() {
                       asChild
                       isActive={active}
                       tooltip={item.title}
-                      className="h-10 rounded-lg text-sidebar-foreground/80 transition-colors data-[active=true]:bg-primary/15 data-[active=true]:text-foreground data-[active=true]:[&_svg]:text-primary-glow"
+                      className="h-10 rounded-lg text-sidebar-foreground transition-colors data-[active=true]:bg-primary data-[active=true]:font-semibold data-[active=true]:text-primary-foreground data-[active=true]:shadow-glow data-[active=true]:[&_svg]:text-primary-foreground"
                     >
                       <Link to={item.url} onClick={() => setOpenMobile(false)}>
                         <item.icon />

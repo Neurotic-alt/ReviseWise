@@ -80,8 +80,14 @@ function Dashboard() {
   const todaysTasks = tasks ? tasksOn(tasks, todayKey) : [];
   const nextExam = today && exams ? upcomingExams(exams, today)[0] : undefined;
   const avgScore =
-    attempts && attempts.length
-      ? Math.round((attempts.reduce((s, a) => s + a.correct / a.total, 0) / attempts.length) * 100)
+    attempts && attempts.some((a) => a.total > 0)
+      ? Math.round(
+          (attempts
+            .filter((a) => a.total > 0)
+            .reduce((s, a) => s + a.correct / a.total, 0) /
+            attempts.filter((a) => a.total > 0).length) *
+            100,
+        )
       : 0;
 
   return (

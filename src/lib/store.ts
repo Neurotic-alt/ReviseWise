@@ -13,6 +13,31 @@ export interface PersistentStore<T> {
   subscribe: (listener: () => void) => () => void;
 }
 
+/**
+ * Makes saved data (browser copy or account row) safe to use: a list store always holds a
+ * list of records, an object store always has every default field. Empty, null or
+ * wrongly-shaped data falls back to the defaults instead of crashing a page.
+ */
+export function normalizeStored<T>(value: unknown, fallback: () => T): T {
+  const base = fallback();
+  if (Array.isArray(base)) {
+    if (!Array.isArray(value)) return base;
+    return value.filter((x) => x !== null && typeof x === "object") as T;
+  }
+  if (base !== null && typeof base === "object") {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return base;
+    const merged: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      const d = merged[k];
+      if (v === null || v === undefined) continue;
+      if (d !== undefined && d !== null && typeof d !== typeof v) continue;
+      merged[k] = v;
+    }
+    return merged as T;
+  }
+  return value === null || value === undefined ? base : (value as T);
+}
+
 const STORAGE_PREFIX = "revisewise:v1:";
 const registry: PersistentStore<unknown>[] = [];
 
@@ -26,7 +51,7 @@ export function createPersistentStore<T>(key: string, seed: () => T): Persistent
     if (state !== undefined) return state;
     try {
       const raw = window.localStorage.getItem(storageKey);
-      state = raw ? (JSON.parse(raw) as T) : seed();
+      state = raw ? normalizeStored<T>(JSON.parse(raw), seed) : seed();
     } catch {
       state = seed();
     }
@@ -36,7 +61,7 @@ export function createPersistentStore<T>(key: string, seed: () => T): Persistent
   const store: PersistentStore<T> = {
     get,
     set(updater) {
-      state = updater(get());
+      state = normalizeStored<T>(updater(get()), seed);
       try {
         window.localStorage.setItem(storageKey, JSON.stringify(state));
       } catch {

@@ -25,10 +25,11 @@ export function greetingName(p: {
   email?: string | null | undefined;
 }): string {
   if (!p.signedIn) return GUEST_NAME;
-  const typed = p.settingsName?.trim();
-  const fromEmail = p.email?.split("@")[0]?.replace(/[._-]+/g, " ").trim();
+  const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const typed = str(p.settingsName);
+  const fromEmail = str(p.email).split("@")[0]?.replace(/[._-]+/g, " ").trim();
   const name =
-    (typed && typed !== LEGACY_PLACEHOLDER_NAME ? typed : "") || p.accountName?.trim() || fromEmail || "";
+    (typed && typed !== LEGACY_PLACEHOLDER_NAME ? typed : "") || str(p.accountName) || fromEmail || "";
   const first = name.split(/\s+/)[0] ?? "";
   return first ? first.charAt(0).toUpperCase() + first.slice(1) : GUEST_NAME;
 }

@@ -8,6 +8,16 @@
 // hosting already compresses at the edge.
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { loadEnv } from "vite";
+
+// Published builds have shipped without the backend address, which left sign-in broken.
+// Fill in this project's public address only when neither the environment nor .env provides one.
+// (Public value; the key itself still comes from the environment.)
+const PUBLIC_BACKEND_URL = "https://giexklqnmidpbprflfbl.supabase.co";
+const fileEnv = loadEnv("production", process.cwd(), "VITE_");
+if (!process.env["VITE_SUPABASE_URL"] && !fileEnv["VITE_SUPABASE_URL"]) {
+  process.env["VITE_SUPABASE_URL"] = PUBLIC_BACKEND_URL;
+}
 
 export default defineConfig({
   tanstackStart: {

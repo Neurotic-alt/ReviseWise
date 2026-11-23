@@ -2,15 +2,17 @@ import { useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { backend } from "@/lib/data/backend";
 
 export const Route = createFileRoute("/reset-password")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Choose a new password — ReviseWise" },
+      { name: "robots", content: "noindex" },
       { name: "description", content: "Set a new password for your ReviseWise account." },
       { property: "og:title", content: "Choose a new password — ReviseWise" },
       { property: "og:description", content: "Set a new password for your ReviseWise account." },
@@ -48,7 +50,7 @@ function ResetPasswordPage() {
     <div className="mx-auto max-w-md py-6">
       <Card>
         <CardHeader>
-          <CardTitle>Choose a new password</CardTitle>
+          <h1 className="font-display text-xl font-semibold leading-tight tracking-tight">Choose a new password</h1>
         </CardHeader>
         <CardContent>
           <form onSubmit={(e) => void submit(e)} className="space-y-4">

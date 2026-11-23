@@ -17,6 +17,7 @@ import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/quiz': typeof QuizRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/quiz': typeof QuizRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/quiz': typeof QuizRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/reset-password'
     | '/settings'
+    | '/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/reset-password'
     | '/settings'
+    | '/sitemap.xml'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/reset-password'
     | '/settings'
+    | '/sitemap.xml'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   QuizRoute: typeof QuizRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuizRoute: QuizRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

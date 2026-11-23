@@ -48,6 +48,7 @@ interface QuizSearch {
 }
 
 export const Route = createFileRoute("/quiz")({
+  staticData: { sitemap: true },
   validateSearch: (search: Record<string, unknown>): QuizSearch => {
     const subject = SUBJECTS.find((s) => s.id === search["subject"]);
     const topic = subject?.topics.find((t) => t.id === search["topic"]);

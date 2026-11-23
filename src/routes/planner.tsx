@@ -28,6 +28,7 @@ import { useStore, useToday } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/planner")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Revision Planner — ReviseWise" },

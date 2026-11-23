@@ -33,6 +33,7 @@ import { resetAllStores, useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Settings — ReviseWise" },

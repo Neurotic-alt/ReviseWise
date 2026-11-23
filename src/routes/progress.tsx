@@ -52,6 +52,7 @@ import { useStore, useToday } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/progress")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "My Progress — ReviseWise" },

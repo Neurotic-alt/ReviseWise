@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GoogleButton } from "@/components/app/GoogleButton";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Sign in — ReviseWise" },
@@ -98,7 +99,7 @@ function AuthPage() {
     <div className="mx-auto max-w-md py-6">
       <Card>
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
+          <h1 className="font-display text-xl font-semibold leading-tight tracking-tight">{title}</h1>
           <p className="text-sm text-muted-foreground">
             Your tasks, revision plans, quiz scores, streaks and AI Companion chats are saved to your
             account so they're there on any device.

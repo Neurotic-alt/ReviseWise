@@ -56,6 +56,7 @@ interface SendTarget {
 const isSubjectId = (v: unknown): v is SubjectId => SUBJECTS.some((s) => s.id === v);
 
 export const Route = createFileRoute("/companion")({
+  staticData: { sitemap: true },
   validateSearch: (search: Record<string, unknown>): CompanionSearch => {
     const prompt = search["prompt"];
     const mode = search["mode"];

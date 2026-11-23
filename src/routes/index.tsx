@@ -41,6 +41,7 @@ import { useStore, useToday } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Dashboard — ReviseWise" },

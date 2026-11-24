@@ -20,8 +20,8 @@ An AI-powered learning platform designed to help students study smarter. ReviseW
 ## 🛠️ Tech Stack
 * **Platform & Builder:** [Lovable.dev](https://lovable.dev)
 * **Frontend:** React, TypeScript, Vite, Tailwind CSS, shadcn/ui
-* **Backend & Database:** Supabase *(remove if not used)*
-* **AI Integration:** Gemini / OpenAI API *(update with your specific model)*
+* **Backend & Database:** Supabase 
+* **AI Integration:** Gemini / OpenAI API 
 
 ## 🚀 Getting Started
 
@@ -32,7 +32,7 @@ An AI-powered learning platform designed to help students study smarter. ReviseW
 ### Local Installation
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/your-username/revisewise.git](https://github.com/your-username/revisewise.git)
+   git clone https://revisewise-bright-ideas.lovable.app/#
    cd revisewise
    ```
 
@@ -52,7 +52,6 @@ An AI-powered learning platform designed to help students study smarter. ReviseW
    ```bash
    npm run dev
    ```
-   Visit `http://localhost:8080` (or the port shown in your terminal) to view the app locally.
 
 ## 🔄 Lovable Sync Workflow
 This project is synced with [Lovable](https://lovable.dev). Any changes made via prompts in the Lovable editor are automatically pushed to this repository, and local changes pushed to `main` will reflect in the Lovable project.

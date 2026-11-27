@@ -6,6 +6,7 @@ import {
   geminiThinking,
   PRACTICE_SCHEMA,
   buildSystemPrompt,
+  buildStudentContext,
   trimHistory,
   type TutorRequest,
 } from "./tutor-prompt";
@@ -21,7 +22,7 @@ async function askGeminiDirect(req: TutorRequest, model: string): Promise<string
       role: t.role === "student" ? "user" : "model",
       parts: [{ text: t.text }],
     })),
-    { role: "user", parts: [{ text: req.question }] },
+    { role: "user", parts: [{ text: buildStudentContext(req) + req.question }] },
   ];
 
   const res = await fetch(
@@ -69,7 +70,7 @@ async function askGeminiViaGateway(req: TutorRequest): Promise<string> {
     messages: [
       { role: "system", content: buildSystemPrompt(req) },
       ...history,
-      { role: "user", content: req.question },
+      { role: "user", content: buildStudentContext(req) + req.question },
     ],
     ...(req.mode === "practice"
       ? {

@@ -2,7 +2,7 @@ import { QUESTION_BANK } from "./data/question-bank";
 import type { Difficulty, QuizQuestion, SubjectId } from "./data/types";
 import type { Marking } from "./study-context";
 
-export const QUESTION_COUNTS = [3, 5] as const;
+export const QUESTION_COUNTS = [5, 10, 15, 20, 30] as const;
 export const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
 
 const RANK: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 };

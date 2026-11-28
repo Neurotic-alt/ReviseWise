@@ -3,6 +3,7 @@ import { backend } from "./backend";
 import type { Json } from "@/integrations/supabase/types";
 import { resetAllStores, type PersistentStore } from "../store";
 import {
+  questionHistoryStore,
   activityStore,
   chatStore,
   customQuizAttemptsStore,
@@ -18,6 +19,7 @@ import {
 // and every later change is saved to the account shortly after it happens.
 
 const SYNCED: Record<string, PersistentStore<unknown>> = {
+  "question-history": questionHistoryStore,
   tasks: tasksStore,
   exams: examsStore,
   "quiz-attempts": quizAttemptsStore,

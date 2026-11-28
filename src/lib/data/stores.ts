@@ -33,3 +33,6 @@ export const activityStore = createPersistentStore<ActivityEvent[]>("activity", 
 /** Dates (yyyy-MM-dd) on which all three daily missions were completed. */
 export const missionDaysStore = createPersistentStore<string[]>("mission-days", () => []);
 export const chatStore = createPersistentStore<ChatMessage[]>("companion-chat", () => []);
+
+/** Recently asked prompts, kept per student to avoid repeated practice. */
+export const questionHistoryStore = createPersistentStore<string[]>("question-history", () => []);

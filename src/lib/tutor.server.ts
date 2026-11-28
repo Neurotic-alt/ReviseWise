@@ -1,3 +1,5 @@
+import type { ModelAttachment } from "./materials";
+import { directParts, gatewayContent } from "./model-content";
 import { GatewayError, generateChatCompletion } from "@lovable.dev/ai-gateway";
 import {
   GEMINI_DIRECT_MODELS,
@@ -12,7 +14,7 @@ import {
 } from "./tutor-prompt";
 
 /** Calls Google's Gemini API with the project's GEMINI_API_KEY. Throws on any failure. */
-async function askGeminiDirect(req: TutorRequest, model: string): Promise<string> {
+async function askGeminiDirect(req: TutorRequest, model: string, files: ModelAttachment[]): Promise<string> {
   const key = process.env["GEMINI_API_KEY"];
   if (!key) throw new Error("GEMINI_API_KEY is not set");
   const practice = req.mode === "practice";
@@ -22,7 +24,7 @@ async function askGeminiDirect(req: TutorRequest, model: string): Promise<string
       role: t.role === "student" ? "user" : "model",
       parts: [{ text: t.text }],
     })),
-    { role: "user", parts: [{ text: buildStudentContext(req) + req.question }] },
+    { role: "user", parts: directParts(buildStudentContext(req) + req.question, files) },
   ];
 
   const res = await fetch(
@@ -60,7 +62,7 @@ async function askGeminiDirect(req: TutorRequest, model: string): Promise<string
 }
 
 /** Backup route: the same Gemini model through the Lovable AI Gateway (LOVABLE_API_KEY). */
-async function askGeminiViaGateway(req: TutorRequest): Promise<string> {
+async function askGeminiViaGateway(req: TutorRequest, files: ModelAttachment[]): Promise<string> {
   const history = trimHistory(req.history).map((t) => ({
     role: t.role === "student" ? ("user" as const) : ("assistant" as const),
     content: t.text,
@@ -70,7 +72,7 @@ async function askGeminiViaGateway(req: TutorRequest): Promise<string> {
     messages: [
       { role: "system", content: buildSystemPrompt(req) },
       ...history,
-      { role: "user", content: buildStudentContext(req) + req.question },
+      { role: "user", content: gatewayContent(buildStudentContext(req) + req.question, files) },
     ],
     ...(req.mode === "practice"
       ? {
@@ -90,16 +92,16 @@ async function askGeminiViaGateway(req: TutorRequest): Promise<string> {
 export type TutorRoute = "gemini" | "gateway";
 
 /** Tries the student's own Gemini key first, then the Lovable gateway. */
-export async function askTutor(req: TutorRequest): Promise<{ text: string; route: TutorRoute }> {
+export async function askTutor(req: TutorRequest, files: ModelAttachment[] = []): Promise<{ text: string; route: TutorRoute }> {
   for (const model of GEMINI_DIRECT_MODELS) {
     try {
-      return { text: await askGeminiDirect(req, model), route: "gemini" };
+      return { text: await askGeminiDirect(req, model, files), route: "gemini" };
     } catch (directError) {
       console.error(`[tutor] ${model} failed:`, String(directError).slice(0, 160));
     }
   }
   try {
-    return { text: await askGeminiViaGateway(req), route: "gateway" };
+    return { text: await askGeminiViaGateway(req, files), route: "gateway" };
   } catch (gatewayError) {
     if (gatewayError instanceof GatewayError) {
       console.error("[tutor] backup failed:", gatewayError.code, gatewayError.httpStatus, gatewayError.ids);

@@ -2,18 +2,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { SUBJECTS } from "./data/subjects";
 import { EXAM_IDS, MAX_CUSTOM_CHARS } from "./study-context";
-import { MAX_HISTORY_MESSAGES, MAX_QUESTION_CHARS, parsePracticeReply } from "./tutor-prompt";
+import { EXPLANATION_MODES, MAX_HISTORY_MESSAGES, MAX_QUESTION_CHARS, parsePracticeReply } from "./tutor-prompt";
 import type { QuizQuestion, SubjectId } from "./data/types";
 
 const subjectIds = SUBJECTS.map((s) => s.id) as [SubjectId, ...SubjectId[]];
 
-const inputSchema = z.object({
+export const tutorInputSchema = z.object({
   question: z.string().trim().min(1).max(MAX_QUESTION_CHARS),
   subjectId: z.enum(subjectIds).optional(),
   /** Typed subject name; used when subjectId is missing. */
   subjectName: z.string().trim().max(MAX_CUSTOM_CHARS).optional(),
   topicName: z.string().trim().max(MAX_CUSTOM_CHARS).optional(),
   exam: z.enum(EXAM_IDS).optional(),
+  explanationMode: z.enum(EXPLANATION_MODES).optional(),
   mode: z.enum(["explain", "hint", "practice", "summarise"]),
   profile: z.object({
     yearGroup: z.string().max(40),
@@ -23,7 +24,7 @@ const inputSchema = z.object({
     explanationStyle: z.enum(["step-by-step", "concise", "visual"]),
   }),
   history: z
-    .array(z.object({ role: z.enum(["student", "companion"]), text: z.string().max(4000) }))
+    .array(z.object({ role: z.enum(["student", "companion"]), text: z.string().max(MAX_QUESTION_CHARS) }))
     .max(MAX_HISTORY_MESSAGES * 2),
 });
 
@@ -33,7 +34,7 @@ export type AskTutorResult =
 
 /** Asks the AI tutor (Gemini). Public: no sign-in exists yet, inputs are validated and capped. */
 export const askTutorFn = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => inputSchema.parse(data))
+  .inputValidator((data: unknown) => tutorInputSchema.parse(data))
   .handler(async ({ data }): Promise<AskTutorResult> => {
     const { askTutor } = await import("./tutor.server");
     const subjectName =

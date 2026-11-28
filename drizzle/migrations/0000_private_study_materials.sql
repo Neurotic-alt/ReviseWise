@@ -1,0 +1,3 @@
+CREATE POLICY "Students upload own study files" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'study-materials' AND (storage.foldername(name))[1] = (select auth.uid())::text);
+CREATE POLICY "Students read own study files" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'study-materials' AND (storage.foldername(name))[1] = (select auth.uid())::text);
+CREATE POLICY "Students remove own study files" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'study-materials' AND (storage.foldername(name))[1] = (select auth.uid())::text);

@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { batchPlan, batchDifficulty, uniqueQuestions, adaptiveDifficulty, type QuizDifficulty } from "@/lib/quiz-upgrade";
+import { generateMaterialQuizFn } from "@/lib/materials.functions";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   CheckCircle2,
@@ -19,7 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { PageHeader, SubjectTag } from "@/components/app/common";
 import { StudyContextFields, useStudyChoice } from "@/components/app/StudyContextFields";
 import { recordCustomQuiz, recordQuiz } from "@/lib/data/actions";
-import { quizAttemptsStore } from "@/lib/data/stores";
+import { questionHistoryStore, quizAttemptsStore } from "@/lib/data/stores";
 import { SUBJECTS, getSubject, getTopicName } from "@/lib/data/subjects";
 import {
   getExam,
@@ -45,6 +48,7 @@ interface QuizSearch {
   subject?: SubjectId;
   topic?: string;
   surprise?: boolean;
+  materials?: string[];
 }
 
 export const Route = createFileRoute("/quiz")({
@@ -53,6 +57,7 @@ export const Route = createFileRoute("/quiz")({
     const subject = SUBJECTS.find((s) => s.id === search["subject"]);
     const topic = subject?.topics.find((t) => t.id === search["topic"]);
     return {
+      ...(Array.isArray(search["materials"]) ? { materials: search["materials"].filter((p): p is string => typeof p === "string" && p.length < 300).slice(0,3) } : {}),
       ...(subject ? { subject: subject.id } : {}),
       ...(topic ? { topic: topic.id } : {}),
       ...(search["surprise"] === true || search["surprise"] === "true" ? { surprise: true } : {}),
@@ -101,9 +106,15 @@ const BAND_COPY = {
 function QuizStudio() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/quiz" });
+  const generateBatch = useServerFn(generateQuizFn);
+  const generateMaterialBatch = useServerFn(generateMaterialQuizFn);
+  const generationRef = useRef(false);
+  const [sourcePaths] = useState(search.materials ?? []);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [adaptive, setAdaptive] = useState(false);
   const [choice, setChoice] = useStudyChoice({ subject: search.subject, topic: search.topic });
   const [isSurprise, setIsSurprise] = useState(false);
-  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [difficulty, setDifficulty] = useState<QuizDifficulty>("medium");
   const [count, setCount] = useState<number>(5);
   const [phase, setPhase] = useState<Phase>("setup");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -128,27 +139,40 @@ function QuizStudio() {
   const [loading, setLoading] = useState<"ai" | "surprise" | null>(null);
 
   const runAi = async (kind: "ai" | "surprise", topics: QuizTopicInput[], n: number) => {
+    if (generationRef.current) return;
+    generationRef.current = true;
     setLoading(kind);
+    setGenerationProgress(0);
+    const accumulated: QuizQuestion[] = [];
+    const previous = questionHistoryStore.get().slice(-60);
     try {
-      const res = await generateQuizFn({
-        data: { topics, count: n, exam: choice.exam, level: choice.level },
-      });
-      if (!res.ok) {
-        toast.error("Couldn't generate a quiz right now. Please try again.");
-        return;
+      const plan = batchPlan(n);
+      for (const [batchIndex, batchCount] of plan.entries()) {
+        const mixedTopics = topics.map(t => ({ ...t, difficulty: t.difficulty === "mixed" ? batchDifficulty("mixed", batchIndex) : t.difficulty }));
+        let accepted: QuizQuestion[] = [];
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const request = { topics: mixedTopics, count: batchCount, exam: choice.exam, level: choice.level, exclude: [...previous, ...accumulated.map(q => q.prompt)].slice(-90) };
+          const res = sourcePaths.length
+            ? await generateMaterialBatch({ data: { request, paths: sourcePaths } })
+            : await generateBatch({ data: request });
+          // Failed calls may already be billed: stop rather than automatically replaying them.
+          if (!res.ok) throw new Error("Couldn't finish this batch. Your quiz hasn't started; try again when ready.");
+          accepted = uniqueQuestions(res.questions, request.exclude);
+          if (accepted.length === batchCount) break;
+        }
+        if (accepted.length !== batchCount) throw new Error("Some questions repeated. Please generate a new quiz.");
+        accumulated.push(...accepted);
+        setGenerationProgress(accumulated.length);
       }
+      if (accumulated.length !== n) throw new Error("The quiz is incomplete. Please try again.");
+      questionHistoryStore.set(prev => [...prev, ...accumulated.map(q => q.prompt)].slice(-1000));
       setIsSurprise(kind === "surprise");
       setQuizMarking(quizMarkingFor(choice.exam, negativeMarking));
-      setQuestions(res.questions);
-      setAnswers({});
-      setChecked({});
-      setPhase("taking");
+      setQuestions(accumulated);
+      setAnswers({}); setChecked({}); setPhase("taking");
       window.scrollTo({ top: 0 });
-    } catch {
-      toast.error("Couldn't generate a quiz right now. Please try again.");
-    } finally {
-      setLoading(null);
-    }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't generate a quiz. Please try again."); }
+    finally { generationRef.current = false; setLoading(null); }
   };
 
   const generate = () => {
@@ -166,7 +190,7 @@ function QuizStudio() {
           subjectName,
           topicId: topicId ?? topicName ?? subjectName,
           topicName: topicName ?? subjectName,
-          difficulty,
+          difficulty: adaptive && subjectId && topicId ? adaptiveDifficulty(quizAttemptsStore.get(), subjectId, topicId).difficulty : difficulty,
         },
       ],
       count,
@@ -196,7 +220,8 @@ function QuizStudio() {
       .filter((t) => !seen.has(`${t.subjectId}:${t.topicId}`))
       .sort(() => Math.random() - 0.5);
     while (topics.length < SURPRISE_QUESTION_COUNT && all.length) {
-      const t = all.pop()!;
+      const t = all.pop();
+      if (!t) break;
       topics.push({ ...named(t.subjectId, t.topicId), difficulty: "hard" });
     }
     void runAi("surprise", topics, SURPRISE_QUESTION_COUNT);
@@ -227,7 +252,7 @@ function QuizStudio() {
       });
     }
     recordCustomQuiz(questions, answers, {
-      difficulty,
+      difficulty: difficulty === "mixed" ? "medium" : difficulty,
       exam,
       level: choice.level,
       marking: quizMarking,
@@ -259,14 +284,17 @@ function QuizStudio() {
           </CardHeader>
           <CardContent className="space-y-6">
             <StudyContextFields choice={choice} onChange={setChoice} />
+            {sourcePaths.length > 0 && <p className="text-sm text-primary-glow">Quiz from your selected study materials</p>}
+            <div className="flex items-center justify-between gap-3"><span className="text-sm">Adaptive difficulty</span><Switch checked={adaptive} onCheckedChange={setAdaptive} aria-label="Adaptive difficulty" /></div>
+            {adaptive && choice.subject !== "other" && <p className="text-xs text-muted-foreground">{adaptiveDifficulty(quizAttemptsStore.get(), choice.subject as SubjectId, choice.topic).reason}</p>}
             <Field label="Difficulty">
               <Segmented
-                options={DIFFICULTIES.map((d) => ({
+                options={[...DIFFICULTIES, "mixed"].map((d) => ({
                   value: d,
                   label: d.charAt(0).toUpperCase() + d.slice(1),
                 }))}
                 value={difficulty}
-                onChange={(v) => setDifficulty(v as Difficulty)}
+                onChange={(v) => setDifficulty(v as QuizDifficulty)}
                 ariaLabel="Difficulty"
               />
             </Field>
@@ -314,6 +342,7 @@ function QuizStudio() {
                 {loading === "surprise" ? <Loader2 className="animate-spin" /> : <Dices />} Surprise me
               </Button>
             </div>
+            {loading && <p role="status" className="text-sm text-primary-glow">Generating questions · {generationProgress}/{loading === "surprise" ? SURPRISE_QUESTION_COUNT : count}</p>}
             <p className="text-xs text-muted-foreground">
               Surprise me asks AI for a {SURPRISE_QUESTION_COUNT}-question mix from topics that are due
               for revision or need more practice, plus a few stretch questions.
@@ -360,11 +389,11 @@ function QuizStudio() {
                 {BAND_COPY[band].text}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Marking: {signed(quizMarking.correct)} correct, {signed(quizMarking.wrong)} wrong, 0
+                Accuracy: {marked.correct + marked.wrong ? Math.round(marked.correct / (marked.correct + marked.wrong) * 100) : 0}% · Marking: {signed(quizMarking.correct)} correct, {signed(quizMarking.wrong)} wrong, 0
                 skipped.
               </p>
             </div>
-            <Button variant="hero" onClick={isSurprise ? surprise : generate}>
+            <Button variant="hero" onClick={isSurprise ? surprise : generate} disabled={loading !== null}>
               {isSurprise ? <Dices /> : <RotateCcw />} {isSurprise ? "Another surprise" : "Retake"}
             </Button>
           </CardContent>
@@ -588,7 +617,7 @@ interface QuizTopicInput {
   subjectName: string;
   topicId: string;
   topicName: string;
-  difficulty: Difficulty;
+  difficulty: QuizDifficulty;
 }
 
 const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0");

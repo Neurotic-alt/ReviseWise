@@ -47,7 +47,7 @@ export interface QuizAudience {
   level: string;
 }
 
-export function buildQuizPrompt(topics: QuizTopicRequest[], count: number, audience: QuizAudience) {
+export function buildQuizPrompt(topics: QuizTopicRequest[], count: number, audience: QuizAudience, exclude: string[] = []) {
   const exam = getExam(audience.exam);
   const list = topics
     .map((t, i) => `${i}. ${t.subjectName} — ${t.topicName} (difficulty: ${t.difficulty})`)
@@ -60,6 +60,7 @@ export function buildQuizPrompt(topics: QuizTopicRequest[], count: number, audie
     "Each question has exactly four distinct options and one correct answerIndex (0-3).",
     "steps: ALWAYS give a worked solution in 2-5 short steps (no numbering) that a student can follow from the question to the correct answer, showing any formula, rule or calculation used. Never leave steps empty.",
     "explanation: one sentence on why the answer is correct and why the most tempting wrong option is wrong.",
+    `Do not repeat or paraphrase these previously asked questions: ${JSON.stringify(exclude)}`,
     "Be accurate and match the stated difficulty. Vary the position of the correct answer. Reply with JSON only.",
   ].join("\n");
 }
@@ -92,6 +93,8 @@ export function parseQuizReply(raw: string, topics: QuizTopicRequest[], count: n
       answerIndex > 3
     )
       continue;
+    const steps = cleanSteps(d["steps"]);
+    if (steps.length < 2 || typeof d["explanation"] !== "string" || !d["explanation"].trim()) continue;
     const ti = typeof d["topicIndex"] === "number" ? d["topicIndex"] : 0;
     const topic = topics[ti] ?? topics[0];
     if (!topic) continue;

@@ -23,3 +23,11 @@
 - [x] Dashboard greets the signed-in student by name (Student when signed out)
 - [x] Skipped quiz questions score 0 and are saved as skipped
 - [x] Holographic Glass theme: lavender-gold gradient, frosted cards, magenta actions and readable contrast
+
+## Complete AI upgrade
+- [ ] Companion depth modes, longer context and graceful recovery
+- [ ] 5–30 question batched quizzes, mixed difficulty and progress
+- [ ] Private document library, image/camera attachments and source-grounded notes actions
+- [ ] Notes quizzes and adaptive practice from saved attempts
+- [ ] Regression and signed-in feature verification; report limitations
+- [ ] Apply the user's clean neutral and soft tint palette across existing and new screens

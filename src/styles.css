@@ -9,7 +9,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * ReviseWise design system — Holographic Glass.
+ * ReviseWise design system — clean neutrals and soft tints.
  * 60% Soft Lavender Blush (#D8A7CB) and warm pink/gold atmosphere,
  * 30% Iridescent Magenta (#E8327E) actions and active states,
  * 10% Holographic Gold (#FFE37E) badges, streaks and highlights.
@@ -83,119 +83,65 @@
 }
 
 :root {
-  --radius: 0.875rem;
-
-  --lavender-blush: oklch(0.7842 0.0745 336.05); /* #D8A7CB */
-  --gold: oklch(0.9184 0.1249 94.26); /* #FFE37E */
-  --gold-foreground: oklch(0.2099 0.0424 313.03); /* #1F1226 */
-  --background: var(--lavender-blush);
-  --surface: oklch(1 0 0 / 55%);
-  --foreground: oklch(0.2099 0.0424 313.03); /* #1F1226 */
-  --card: oklch(1 0 0 / 55%);
-  --card-foreground: oklch(0.2099 0.0424 313.03);
-  --card-elevated: oklch(1 0 0 / 72%);
-  --popover: oklch(1 0 0 / 94%);
-  --popover-foreground: oklch(0.2099 0.0424 313.03);
-
-  --primary: oklch(0.6229 0.2212 1.43); /* #E8327E */
-  --primary-foreground: oklch(0.2099 0.0424 313.03);
-  --primary-glow: oklch(0.488 0.1965 3.49); /* #B00054, readable accent text */
-  --info: oklch(0.4722 0.1167 259.5);
-
-  --secondary: oklch(1 0 0 / 42%);
-  --secondary-foreground: oklch(0.2099 0.0424 313.03);
-  --muted: oklch(1 0 0 / 36%);
-  --muted-foreground: oklch(0.39 0.05 318);
-  --accent: oklch(0.9184 0.1249 94.26 / 34%);
-  --accent-foreground: oklch(0.2099 0.0424 313.03);
-
-  --success: oklch(0.4985 0.0986 163.59);
-  /* Google sign-in button, dark theme (fixed by Google's branding rules) */
+  --radius: 0.5rem;
+  --background: #f7f7f4;
+  --surface: #fafaf8;
+  --foreground: #292c30;
+  --card: #ffffff;
+  --card-foreground: var(--foreground);
+  --card-elevated: #f1f2f0;
+  --popover: #ffffff;
+  --popover-foreground: var(--foreground);
+  --primary: #425d55;
+  --primary-foreground: #ffffff;
+  --primary-glow: #355248;
+  --secondary: #edece8;
+  --secondary-foreground: var(--foreground);
+  --muted: #f0f0ed;
+  --muted-foreground: #62676b;
+  --accent: #eee9df;
+  --accent-foreground: #4e4941;
+  --gold: #efe6ce;
+  --gold-foreground: #62502e;
+  --lavender-blush: #eae7ed;
+  --info: #426284;
+  --success: #3d7057;
+  --success-foreground: #ffffff;
+  --warning: #8a661f;
+  --warning-foreground: #ffffff;
+  --destructive: #a94443;
+  --destructive-foreground: #ffffff;
   --google: #131314;
   --google-border: #8e918f;
   --google-foreground: #e3e3e3;
-  --success-foreground: oklch(0.9856 0.0091 341.8);
-  --warning: oklch(0.5078 0.108 73.3);
-  --warning-foreground: oklch(0.9856 0.0091 341.8);
-  --destructive: oklch(0.5068 0.1792 13.96);
-  --destructive-foreground: oklch(0.9856 0.0091 341.8);
-
-  --border: oklch(1 0 0 / 64%);
-  --input: oklch(0.2099 0.0424 313.03 / 32%);
-  --ring: oklch(0.488 0.1965 3.49);
-
-  --chart-1: oklch(0.6229 0.2212 1.43);
-  --chart-2: oklch(0.4722 0.1167 259.5);
-  --chart-3: oklch(0.4985 0.0986 163.59);
-  --chart-4: oklch(0.5078 0.108 73.3);
-  --chart-5: oklch(0.51 0.139 357.09);
-
-  --subject-1: oklch(0.4893 0.1631 305.55);
-  --subject-2: oklch(0.4722 0.1167 259.5);
-  --subject-3: oklch(0.5028 0.0823 186.03);
-  --subject-4: oklch(0.531 0.119 65.12);
-  --subject-5: oklch(0.51 0.139 357.09);
-  --subject-6: oklch(0.4849 0.0775 233.74);
-
-  --sidebar: oklch(1 0 0 / 55%);
-  --sidebar-foreground: oklch(0.2099 0.0424 313.03);
-  --sidebar-primary: oklch(0.6229 0.2212 1.43);
-  --sidebar-primary-foreground: oklch(0.2099 0.0424 313.03);
-  --sidebar-accent: oklch(1 0 0 / 48%);
-  --sidebar-accent-foreground: oklch(0.2099 0.0424 313.03);
-  --sidebar-border: oklch(1 0 0 / 66%);
-  --sidebar-ring: oklch(0.488 0.1965 3.49);
-
-  --gradient-primary: linear-gradient(
-    120deg,
-    var(--primary),
-    color-mix(in oklab, var(--primary) 90%, var(--gold)) 58%,
-    var(--primary) 115%
-  );
-  --gradient-soft: linear-gradient(
-    135deg,
-    color-mix(in oklab, var(--primary) 14%, var(--card)),
-    color-mix(in oklab, var(--gold) 30%, var(--card))
-  );
-  --gradient-glass: linear-gradient(
-    135deg,
-    oklch(1 0 0 / 42%),
-    oklch(1 0 0 / 9%) 44%,
-    transparent 74%
-  );
-  --gradient-page:
-    radial-gradient(
-      920px 700px at -6% -8%,
-      color-mix(in oklab, var(--primary) 52%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      820px 660px at 104% 2%,
-      color-mix(in oklab, var(--gold) 92%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      760px 700px at 88% 92%,
-      color-mix(in oklab, var(--primary) 38%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      720px 660px at 4% 100%,
-      color-mix(in oklab, var(--lavender-blush) 96%, transparent),
-      transparent 74%
-    ),
-    linear-gradient(
-      135deg,
-      var(--lavender-blush),
-      color-mix(in oklab, var(--primary) 32%, var(--gold)) 48%,
-      color-mix(in oklab, var(--gold) 72%, var(--lavender-blush))
-    );
-  --shadow-card:
-    1px 1px 0 0 oklch(1 0 0 / 88%) inset,
-    -1px -1px 0 0 oklch(1 0 0 / 22%) inset,
-    0 20px 50px -22px color-mix(in oklab, var(--primary) 44%, transparent),
-    0 5px 18px -10px color-mix(in oklab, var(--primary) 18%, transparent);
-  --shadow-glow: 0 12px 30px -12px color-mix(in oklab, var(--primary) 64%, transparent);
+  --border: #dddfda;
+  --input: #c9cdc6;
+  --ring: var(--primary);
+  --chart-1: #527063;
+  --chart-2: #607c98;
+  --chart-3: #9a805a;
+  --chart-4: #81728c;
+  --chart-5: #a16e71;
+  --subject-1: #786887;
+  --subject-2: #4c6b8a;
+  --subject-3: #44766c;
+  --subject-4: #8b704e;
+  --subject-5: #96686c;
+  --subject-6: #587383;
+  --sidebar: #f0f1ec;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: #e5e9e1;
+  --sidebar-accent-foreground: var(--primary-glow);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --gradient-primary: linear-gradient(var(--primary), var(--primary));
+  --gradient-soft: linear-gradient(120deg, #f1f3ee, #f4f0e9);
+  --gradient-glass: none;
+  --gradient-page: none;
+  --shadow-card: 0 2px 10px -6px #292c3020;
+  --shadow-glow: 0 3px 12px -8px #292c3030;
 }
 
 @layer base {
@@ -221,7 +167,7 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
 
   ::selection {
@@ -260,7 +206,7 @@
   background-color: var(--card);
   background-image: var(--gradient-glass);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(24px) saturate(165%);
 }
